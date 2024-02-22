@@ -1,0 +1,42 @@
+server:
+  port: 9002
+
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: API-GATEWAY
+  config:
+    import: optional:configserver:http://localhost:9296
+  cloud:
+    gateway:
+      routes:
+        - id: USER-MANAGEMENT
+          uri: lb://USER-MANAGEMENT
+          predicates:
+            - Path=/users/**
+          filters:
+              - name: CircuitBreaker
+                args:
+                  name: USER-MANAGEMENT
+                  fallbackuri: forward:/userServiceFallBackMethod
+                  
+            
+        - id: STORE-MANAGEMENT
+          uri: lb://STORE-MANAGEMENT
+          predicates:
+            - Path=/stores/**
+          filters:
+             - name : CircuitBreaker
+               args :
+                    name: STORE-MANAGEMENT
+                    fallbackuri: forward:/storeServiceFallBackMethod
+                    
+ 
+hystrix:
+  command:
+      fallbackcmd:
+           execution:
+            isolation:
+              thread:
+                timeoutMilliseconds: 4000   
